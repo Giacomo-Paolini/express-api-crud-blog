@@ -1,4 +1,6 @@
-const posts = require('../db/arrayPosts')
+const posts = require('../db/arrayPosts.json')
+const FileSystem = require('fs');
+const path = require('path');
 
 function index (req, res) {
 
@@ -11,14 +13,17 @@ function index (req, res) {
             html.push("<ul class=''>");
 
             posts.forEach(post => {
+                let imageUrl = post.image.startsWith('http') ? post.image : `/assets/images/${post.image}`;
+
                 html.push(`<li>
                     <h2>${post.title}</h2>
                     <p>${post.content}</p>
-                    <img src="/assets/images/${post.image}" alt="${post.title}" class="w-25"><br>`);
-            
-                post.tags.forEach(tag => {
-                    html.push(`<span class="badge bg-primary">${tag}</span>`);
-                });
+                    <img src="${imageUrl}" alt="${post.title}" class="w-25"><br>`);
+                if(post.tags) {
+                    post.tags.forEach(tag => {
+                        html.push(`<span class="badge bg-primary">${tag}</span>`);
+                    });
+                }
             
                 html.push(`</li>`);
             });
@@ -46,7 +51,7 @@ function show (req, res) {
 
                 html.push(`<p>${post.content}</p>`);
 
-                html.push(`<img src="/assets/images/${post.image}" alt="${post.title}" class="w-25"><br>`);
+                html.push(`<img src="${imageUrl}" alt="${post.title}" class="w-25"><br>`);
 
                 post.tags.forEach(tag => {
                     html.push(`<span class="badge bg-primary">${tag}</span>`);
@@ -82,17 +87,54 @@ function create (req, res) {
 function download (req, res) {
     const slug = req.params.slug;
     const post = posts.find(post => post.slug === slug);
+    let imageUrl = post.image.startsWith('http') ? post.image : `/assets/images/${post.image}`;
+
 
     if (post) {
-        res.download(`./public/assets/images/${post.image}`, `${post.slug}.png`);
+        res.download(`${imageUrl}`, `${post.slug}.png`);
     } else {
         res.status(404).send("Post not found");
     }
 
 }
+
+function store(req, res) {
+    const newPost = {
+        title: req.body.title,
+        content: req.body.content,
+        slug: req.body.slug,
+        image: req.body.image
+    };
+
+    console.log(newPost);
+
+    posts.push(newPost);
+
+    res.status(201).json(newPost);
+    FileSystem.writeFileSync(path.resolve('./db/arrayPosts.json'), JSON.stringify(posts), (err) => {
+        if (err) {
+            console.log(err);
+        }
+    });
+
+    res.format({
+        html: () => {
+            res.type("html").send(
+                "<h1>Creazione nuovo post</h1>"
+            );
+        },
+        default: () => {
+            res.type("json").send(JSON.stringify(newPost))
+            res.status(406).send("Not Acceptable");
+        },
+    })
+}
+
+
 module.exports = {
   index,
   show,
   create,
   download,
+  store,
 }
