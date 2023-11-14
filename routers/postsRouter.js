@@ -9,5 +9,6 @@ router.get("/:slug", postsController.show);
 router.get("/:slug/download", postsController.download);
 
 router.post("/", multer().none(), postsController.store);
+router.post("/:slug", postsController.destroy);
 
 module.exports = router;

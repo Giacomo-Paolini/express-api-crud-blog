@@ -133,7 +133,36 @@ function store(req, res) {
     });
 }
 
+function destroy(req, res) {
+    const slug = req.params.slug;
+    const postIndex = posts.findIndex(post => post.slug === slug);
 
+    if (postIndex !== -1) {
+        posts.splice(postIndex, 1);
+
+        FileSystem.writeFileSync(path.resolve('./db/arrayPosts.json'), JSON.stringify(posts), (err) => {
+            if (err) {
+                console.log(err);
+            }
+        });
+
+        res.format({
+            html: () => {
+                res.type("html").send(
+                    res.redirect(`/posts`)
+                );
+            },
+            json: () => {
+                res.type("json").status(200).send("Post eliminato");
+            },
+            default: () => {
+                res.status(406).send("Not Acceptable");
+            },
+        });
+    } else {
+        res.status(404).send("Post not found");
+    }
+}
 
 module.exports = {
   index,
@@ -141,4 +170,5 @@ module.exports = {
   create,
   download,
   store,
+  destroy
 }
