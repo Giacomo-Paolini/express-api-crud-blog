@@ -46,6 +46,8 @@ function show (req, res) {
     if (post) {
         res.format({
             html: () => {
+                let imageUrl = post.image.startsWith('http') ? post.image : `/assets/images/${post.image}`;
+
                 res.type("html")
                 const html = [`<h1>${post.title}</h1>`];
 
@@ -119,7 +121,7 @@ function store(req, res) {
     res.format({
         html: () => {
             res.type("html").send(
-                "<h1>Creazione nuovo post</h1>"
+                res.redirect(`/posts/create`)
             );
         },
         json: () => {
