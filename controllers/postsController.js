@@ -110,7 +110,6 @@ function store(req, res) {
 
     posts.push(newPost);
 
-    res.status(201).json(newPost);
     FileSystem.writeFileSync(path.resolve('./db/arrayPosts.json'), JSON.stringify(posts), (err) => {
         if (err) {
             console.log(err);
@@ -123,12 +122,15 @@ function store(req, res) {
                 "<h1>Creazione nuovo post</h1>"
             );
         },
+        json: () => {
+            res.type("json").status(201).send(JSON.stringify(newPost));
+        },
         default: () => {
-            res.type("json").send(JSON.stringify(newPost))
             res.status(406).send("Not Acceptable");
         },
-    })
+    });
 }
+
 
 
 module.exports = {
